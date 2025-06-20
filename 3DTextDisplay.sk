@@ -1,0 +1,134 @@
+command /text [<text>] [<text>]:
+	trigger:
+		set {_width::*} to "7,7,7,7,7,7,7,7,3.8,7,7,6,10,8,7,7,8,7,7,9,7,7,10,7,7,7,7,5,7,7,9,7,7,7,7,7,4" split at ","
+		set {_lett::*} to "abcdefghijklmnopqrstuvwxyz01234s6789 " split at ""
+		set {_nums::*} to integers between 7072 and 7107
+		if arg-1 is "cherry":
+			set {_nums::*} to integers between 7000 and 7035
+		if arg-1 is "flowers":
+			set {_nums::*} to integers between 7036 and 7072
+		loop {_lett::*}:
+			set {_let::%loop-value%} to {_nums::%loop-counter%} ? 0
+			set {_wid::%loop-value%} to {_width::%loop-counter%} parsed as number
+		
+		set {_loc} to location 1.4 above player
+		set pitch of {_loc} to 0
+		set {_loc} to location 3 in front of {_loc}
+		add 180 to yaw of {_loc}
+		
+		set {_scale} to 2
+
+		set {_lines::*} to arg-2 split at "\n"
+		add 0.6*(size of {_lines::*}) to y-coords of {_loc}
+		
+		loop {_lines::*}:
+			set {_clt} to loop-value
+			set {_chars::*} to {_clt} split at ""
+			
+			clear {_line_offs::*}
+			set {_total} to 0
+			
+			loop {_chars::*}:
+				set {_char} to loop-value-2
+				if {_wid::%{_char}%} is not set:
+					continue
+				
+				set {_current_width} to {_wid::%{_char}%}
+				set {_next_width} to 0
+				if {_chars::%loop-counter-2 + 1%} is set:
+					if {_wid::%{_chars::%loop-counter-2 + 1%}%} is set:
+						set {_next_width} to {_wid::%{_chars::%loop-counter-2 + 1%}%}
+				
+				set {_w} to ({_current_width} + {_next_width}) / 2 * 0.1 * {_scale}
+				set {_w} to {_w} / 1.36
+				if {_next_width} is 0:
+					set {_w} to 0
+				add {_w} to {_line_offs::*}
+				add {_w} to {_total}
+				
+			set {_spawn} to {_loc}
+			set {_spawn} to location ({_total} / 2) right of {_spawn}
+			
+			loop {_chars::*}:
+				if loop-counter-2 is size of {_chars::*}:
+					continue
+				set {_char} to loop-value-2
+				if {_let::%{_char}%} is not set:
+					continue
+				spawn item display at {_spawn}:
+					set {_entity} to entity
+					set display brightness of entity to displayBrightness(15,15)
+					set display scale of entity to vector(0,0,0)
+					set interpolation duration of entity to 1 tick
+					set teleport duration of entity to 15 ticks
+				if loop-value-2 is " ":
+					set display item of {_entity} to air
+				else:
+					set {_i} to a potion of luck
+					if arg-1 contains "rgb":
+						set {_speed::*} to arg-1 split at "b"
+						set {_c::*} to getGradientColor(0, 100)
+						dye {_i} rgb({_c::1}, {_c::2}, {_c::3})
+						textRGB({_entity}, {_speed::2} parsed as number ? 100)
+					else:
+						dye {_i} rgb(255, 255, 255)
+					set display item of {_entity} to {_i} with custom model data {_let::%{_char}%}
+				textAnimation({_entity}, false, {_scale})
+				set {_offset} to {_line_offs::%loop-counter-2%}
+				set {_spawn} to location {_offset} left {_spawn}
+				wait 2 tick
+
+			remove 0.7 * {_scale} from y-coords of {_loc}
+
+function textRGB(entity: entity, speed: number):
+	while {_entity} is alive:
+		loop {_speed} ? 100 times:
+			set {_c::*} to getGradientColor(loop-value -1, {_speed})
+			set {_i} to a potion of luck
+			dye {_i} rgb({_c::1}, {_c::2}, {_c::3})
+			set {_cd} to custom model data of display item of {_entity}
+			set display item of {_entity} to {_i} with custom model data {_cd}
+			wait 1 tick
+		wait 1 tick
+
+function textAnimation(entity: entity, rev: boolean, finalscale: number):
+	set {_Bounce-In::*} to 0, 0.1, 0.25, 0.45, 0.7, 0.9, 1.02, 1.08, 1.1, 1.09, 1.07, 1.05, 1.03, 1.01 and 1
+	if {_rev} is true:
+		set {_Bounce-In::*} to reversed {_Bounce-In::*}
+	loop {_Bounce-In::*}:
+		set interpolation start of {_entity} to 0
+		set interpolation duration of {_entity} to 1 tick
+		set {_scale} to {_finalscale}*loop-value
+		set display scale of {_entity} to vector({_scale},{_scale},{_scale})
+		wait 1 tick
+
+function getGradientColor(step: number, length: number) :: objects:
+	set {_normalizedStep} to {_step} / {_length}
+	set {_position} to {_normalizedStep} * 6
+	set {_segment} to floor({_position})
+	set {_progress} to {_position} - {_segment}
+	set {_fadeIn} to round(255 * {_progress})
+	set {_fadeOut} to round(255 * (1 - {_progress}))
+
+	set {_r} to 0
+	set {_g} to 0
+	set {_b} to 0
+	if {_segment} is 0:
+		set {_r} to 255
+		set {_g} to {_fadeIn}
+	else if {_segment} is 1:
+		set {_r} to {_fadeOut}
+		set {_g} to 255
+	else if {_segment} is 2:
+		set {_g} to 255
+		set {_b} to {_fadeIn}
+	else if {_segment} is 3:
+		set {_g} to {_fadeOut}
+		set {_b} to 255
+	else if {_segment} is 4:
+		set {_r} to {_fadeIn}
+		set {_b} to 255
+	else:
+		set {_r} to 255
+		set {_b} to {_fadeOut}
+	return {_r}, {_g}, {_b}
