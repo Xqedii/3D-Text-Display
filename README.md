@@ -23,7 +23,7 @@ Centered text that has 2 lines
 RGB Animated Text with changing colors (default speed 100)
 > /text rgb Animated\nRGB Text
 
-![image](https://github.com/user-attachments/assets/29a31159-40a6-4794-b975-e138928bd7e2)
+![image](https://github.com/user-attachments/assets/2040f3a7-0a28-4cd0-a3d6-e0db693a616b)
 
 ## RGB Speed
 RGB Animated Text with speed set to 20
