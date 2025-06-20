@@ -2,7 +2,7 @@
 This script allows you to create 3D Texts from BlockBench in-game
 
 > [!NOTE]
-> A resource pack is required to run
+> Resource pack is required for the text to be displayed correctly
 
 -----
 
